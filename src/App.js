@@ -16,7 +16,7 @@ const App = () => {
     const [fecha_Nacimiento, setFecha_Nacimiento] = useState("");
     const [carrera, setCarrera] = useState("");
 
-    // Hook useState para poblar el formulario y poder editar un alumno
+    // Hook para identificar un objeto alumno seleccionado para pintar el formulario y posteriormente editarlo
     const [alumnoSeleccionado, setAlumnoSeleccionado] = useState(null);
 
     // Constante con la url de la API base para trabajar con ella en los distintos endpoints
@@ -35,13 +35,13 @@ const App = () => {
     // Hook useEffect para mostrar la lista que viene del backend
     useEffect(() => {
         apiList();
-    }, []);
+    }, [alumnoSeleccionado]); // Se deja alumnoSeleccionado en el arreglo de dependencias para poder utilizarlo en la función PUT (Update del CRUD) y en el rellenado del formulario
 
-    // Función para crear un nuevo objeto alumno en la base de datos usando el botón submit del formulario en pantalla
+    // Función para crear un objeto alumno en la base de datos usando el botón submit del formulario en pantalla
     function handleSubmit(event) {
         event.preventDefault();
 
-        const alumno = { nombre, apellido, fecha_Nacimiento, carrera};
+        const alumno = { nombre, apellido, fecha_Nacimiento, carrera };
 
         fetch(url + "alumnos", {
             method: "POST",
@@ -60,32 +60,49 @@ const App = () => {
 
     // Función de eliminar
     function handleDelete(nombre) {
-        console.log(`Deleting student: ${nombre}`);
-
         fetch(url + `alumnos/${nombre}`, { method: "DELETE" })
             .then(() => {apiList()}); // Solución para actualizar la vista luego de eliminar un registro
     }
 
+    // Función de poblar la data en el formulario
+    function handleEdit(lista) {
+        setAlumnoSeleccionado(lista);
+    }
+    
     // Función de editar
-    function handleEdit(nombre, apellido, fecha_Nacimiento, carrera) { // Se reciben los datos del alumno seleccionado
+    function handleUpdate(event) {
+        event.preventDefault();
 
-        const alumnoEditar = { nombre, apellido, fecha_Nacimiento, carrera };
+        let nombre = event.target[0].value;
+        let apellido = event.target[1].value;
+        let fecha_Nacimiento = event.target[2].value;
+        let carrera = event.target[3].value;
 
-        fetch(url + `alumnos/${nombre}`, {
-            //method: "PUT",
-            //headers: { "Content-Type": "application/json" },
-            //body: JSON.stringify(alumnoEditar),
- })
-            //.then((response) => response.json())
-            .then(console.log(alumnoEditar))
-            //.then((data) => setLista([...lista, data])) // Esta línea permite que se actualice la página automáticamente
+        const alumnoEdit = { nombre, apellido, fecha_Nacimiento, carrera };
+        console.log(alumnoEdit);
+
 
         // Limpiar el formulario
-        /*setNombre("");
+        setNombre("");
+        setApellido("");
+        setFecha_Nacimiento("");
+        setCarrera("");
+
+        /*fetch(url + `alumnos/${nombre}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(alumno),
+        })
+            .then((response) => response.json())
+            .then((data) => setLista([...lista, data])) // Esta línea permite que se actualice la página automáticamente, gracias a React
+
+        // Limpiar el formulario
+        setNombre("");
         setApellido("");
         setFecha_Nacimiento("");
         setCarrera("");*/
-    }   
+    }
+    
 
     return (
         <>
@@ -107,7 +124,7 @@ const App = () => {
                         <td>{lista.nombre}</td>
                         <td>{lista.fecha_Nacimiento}</td>
                         <td>{lista.carrera}</td>
-                        <td><button type="button" onClick={() => handleEdit(lista.nombre, lista.apellido, lista.fecha_Nacimiento, lista.carrera)}>✏</button></td>
+                        <td><button type="button" onClick={() => handleEdit(lista)}>✏</button></td>
                         <td><button type="button" onClick={() => handleDelete(lista.nombre)} >X</button></td>
                     </tr>
                 }) }
@@ -118,7 +135,8 @@ const App = () => {
 
             <h3> Crear o editar un Alumno</h3>
 
-            <form onSubmit={handleSubmit}>
+            { !alumnoSeleccionado ?
+                <form onSubmit={handleSubmit}>
 
                 <p>Nombre: &nbsp;
                     <input type="text"
@@ -152,9 +170,47 @@ const App = () => {
                     </input>
                 </p>
 
-                <button type="submit">Crear o editar</button>
+                <button type="submit">Crear alumno</button>
 
             </form>
+            
+             : ( 
+
+                    <form onSubmit={handleUpdate}>
+
+                <p>Nombre: &nbsp;
+                            <input type="text"
+                                defaultValue={alumnoSeleccionado.nombre}
+                                onChange={(event) => setNombre(event.target.value)}
+                            >
+                    </input>
+                </p>
+
+                <p>Apellido: &nbsp;
+                    <input type="text"
+                                defaultValue={alumnoSeleccionado.apellido}
+                        onChange={(event) => setApellido(event.target.value)}>
+                    </input>
+                </p>
+
+                <p>Fecha de nacimiento: &nbsp;
+                    <input type="text"
+                                defaultValue={alumnoSeleccionado.fecha_Nacimiento}
+                        onChange={(event) => setFecha_Nacimiento(event.target.value)}>
+                    </input>
+                </p>
+
+                <p>Carrera: &nbsp;
+                    <input type="text"
+                                defaultValue={alumnoSeleccionado.carrera}
+                        onChange={(event) => setCarrera(event.target.value)}>
+                    </input>
+                </p>
+
+                <button type="submit">Editar alumno</button>
+
+                </form>
+            )}
         </>
   );
 }
