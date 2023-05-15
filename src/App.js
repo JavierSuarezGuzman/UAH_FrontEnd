@@ -2,7 +2,6 @@
     Mayo 2023 */
 
 import { React, useEffect, useState } from 'react'; // Se importan componentes de react que se usarán para el consumo de la API
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 
 const App = () => {
@@ -18,6 +17,9 @@ const App = () => {
 
     // Hook para identificar un objeto alumno seleccionado para pintar el formulario y posteriormente editarlo
     const [alumnoSeleccionado, setAlumnoSeleccionado] = useState(null);
+
+    // Hook para guardar el nombre para futuros usos
+    const [nombreEdit, setNombreEdit] = useState("");
 
     // Constante con la url de la API base para trabajar con ella en los distintos endpoints
     const url = "https://localhost:7126/api/";
@@ -68,39 +70,36 @@ const App = () => {
     function handleEdit(lista) {
         setAlumnoSeleccionado(lista);
     }
-    
+
     // Función de editar
-    function handleUpdate(event) {
+    // **** POR ALGÚN MOTIVO QUE NI YO, NI CHATGPT PUDIMOS RESOLVER EN EL UPDATE SI SE CAMBIA EL VALOR DEL NOMBRE (PK) NO ACTUALIZA ****
+    async function handleUpdate(event) {
         event.preventDefault();
+
+        const nombreEdit = event.target[0].value;
 
         let nombre = event.target[0].value;
         let apellido = event.target[1].value;
         let fecha_Nacimiento = event.target[2].value;
         let carrera = event.target[3].value;
 
-        const alumnoEdit = { nombre, apellido, fecha_Nacimiento, carrera };
-        console.log(alumnoEdit);
+        const alumno = { nombre, apellido, fecha_Nacimiento, carrera };
+        console.log(alumno);
+        console.log(nombreEdit);
 
+        await fetch(url + `alumnos/${nombreEdit}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(alumno),
+        })
+            .then((data) => setLista([...lista, data]))
+            .then(() => { apiList() })
 
         // Limpiar el formulario
         setNombre("");
         setApellido("");
         setFecha_Nacimiento("");
         setCarrera("");
-
-        /*fetch(url + `alumnos/${nombre}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(alumno),
-        })
-            .then((response) => response.json())
-            .then((data) => setLista([...lista, data])) // Esta línea permite que se actualice la página automáticamente, gracias a React
-
-        // Limpiar el formulario
-        setNombre("");
-        setApellido("");
-        setFecha_Nacimiento("");
-        setCarrera("");*/
     }
     
 
